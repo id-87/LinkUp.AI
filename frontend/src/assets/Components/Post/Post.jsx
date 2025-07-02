@@ -1,5 +1,9 @@
 import React, { useState } from 'react';
 import './Post.css';
+import {db} from '../../../firebase'
+import { collection, addDoc, serverTimestamp }  from 'firebase/firestore';
+
+
 
 const Post = ({ profileData, onBack }) => {
   const [postData, setPostData] = useState({
@@ -10,6 +14,30 @@ const Post = ({ profileData, onBack }) => {
     visibility: 'public',
     location: ''
   });
+
+  const handleCreatePost = async (postContent, postImage, hashtags) => {
+  try {
+    await addDoc(collection(db, "posts"), {
+      author: {
+        name: profileData.name || "Anonymous",
+        title: profileData.title || "",
+        profileImage: profileData.profileImage || null,
+        uid: profileData.uid || null, // if you have user id
+      },
+      content: postContent,
+      image: postImage || null,
+      hashtags: hashtags || [],
+      createdAt: serverTimestamp(),
+      likes: 0,
+      comments: [],
+      shares: 0,
+      location: profileData.location || "",
+    });
+    alert("Post created!");
+  } catch (e) {
+    alert("Error adding post: " + e.message);
+  }
+};
 
   const [newHashtag, setNewHashtag] = useState('');
   const [showEmojiPanel, setShowEmojiPanel] = useState(false);
@@ -209,6 +237,12 @@ const Post = ({ profileData, onBack }) => {
       };
 
       setPosts(prev => [newPost, ...prev]);
+
+      handleCreatePost(
+        postData.content,
+        postData.imagePreview,
+        postData.hashtags
+      );
       
       // Reset form
       setPostData({
